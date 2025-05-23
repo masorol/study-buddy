@@ -50,15 +50,31 @@ def get_messages():
         return jsonify(success=False, message="No thread ID")
 
 # Create the assistant
+def create_assistant():
+    global assistant_id
+    my_assistant = client.beta.assistants.retrieve(assistant_id = "asst_FANWSczvwTSKpuAeTDCm0TdM")
+    assistant_id = my_assistant.id
+    return my_assistant
+
 # Use your assitant_id to retrieve your a assistant from the openai playground
 # Replace "asst_yournewassistantID" with your assistant ID
 
 
 # Create a thread if there isn't one
-
+def create_thread():
+    global thread_id
+    if thread_id == "":
+        thread = client.beta.threads.create()
+        thread_id = thread.id
+    else:
+        thread = client.beta.threads.retrieve(thread_id)
+        thread_id = thread.id
+    return thread
 
 # Function to add to the log in the assistant.log file
-
+def log_run(run_status):
+    if run_status in ["cancelled", "failed", "expired"]:
+        log.error(str(datetime.datetime.now()) + " Run " + run_status + "\n")
 
 # Render the HTML template - we're going to see a UI!!!
 @app.route("/", methods=["GET"])
