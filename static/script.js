@@ -40,81 +40,76 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+document.querySelector("form").addEventListener("submit", function (event) {
+  event.preventDefault();
+  const messageInput = document.querySelector('textarea[name="message"]');
+  const message = messageInput.value.trim();
+  const chatContainer = document.querySelector(".messages");
+  // Append the user's message to the chat container
+  if (message) {
+    const roleDiv = document.createElement("div");
+    roleDiv.classList.add("message-role");
+    roleDiv.classList.add("user");
 
-document
-  .querySelector("form")
-  .addEventListener("submit", function (event) {
-    event.preventDefault();
-    const messageInput = document.querySelector(
-      'textarea[name="message"]'
-    );
-    const message = messageInput.value.trim();
-    const chatContainer = document.querySelector(".messages");
-    // Append the user's message to the chat container
-    if (message) {
-      const roleDiv = document.createElement("div");
-      roleDiv.classList.add("message-role");
-      roleDiv.classList.add("user");
+    roleDiv.textContent = "User";
+    chatContainer.appendChild(roleDiv);
 
-      roleDiv.textContent = "User";
-      chatContainer.appendChild(roleDiv);
+    const userMessageDiv = document.createElement("div");
+    userMessageDiv.classList.add("user-message");
+    userMessageDiv.textContent = message;
+    chatContainer.appendChild(userMessageDiv);
+  }
+  // Clear the message input
+  messageInput.value = "";
+  // Send the user's message to the server using AJAX
+  fetch("/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message: message }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        const roleDiv = document.createElement("div");
+        roleDiv.classList.add("message-role");
+        roleDiv.classList.add("assistant");
 
-      const userMessageDiv = document.createElement("div");
-      userMessageDiv.classList.add("user-message");
-      userMessageDiv.textContent = message;
-      chatContainer.appendChild(userMessageDiv);
-    }
-    // Clear the message input
-    messageInput.value = "";
-    // Send the user's message to the server using AJAX
-    fetch("/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message: message }),
+        roleDiv.textContent = "Assistant";
+        chatContainer.appendChild(roleDiv);
+
+        // Remove the typing indicator
+        typingIndicator.remove();
+
+        // Append the assistant's message to the chat container
+        const assistantMessageDiv = document.createElement("div");
+        assistantMessageDiv.classList.add("assistant-message");
+        assistantMessageDiv.textContent = data.message;
+        chatContainer.appendChild(assistantMessageDiv);
+        // Scroll to the bottom of the chat container
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
     })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          const roleDiv = document.createElement("div");
-          roleDiv.classList.add("message-role");
-          roleDiv.classList.add("assistant");
+    .catch((error) => {
+      console.error("Error:", error);
+    });
 
-          roleDiv.textContent = "Assistant";
-          chatContainer.appendChild(roleDiv);
+  // Create a typing indicator container
+  const typingIndicatorContainer = document.createElement("div");
+  typingIndicatorContainer.classList.add("typing-indicator-container");
 
-          // Remove the typing indicator
-          typingIndicator.remove();
+  // Create a typing indicator
+  const typingIndicator = document.createElement("div");
+  typingIndicator.classList.add("typing-indicator");
+  typingIndicator.textContent = "•••";
 
-          // Append the assistant's message to the chat container
-          const assistantMessageDiv = document.createElement("div");
-          assistantMessageDiv.classList.add("assistant-message");
-          assistantMessageDiv.textContent = data.message;
-          chatContainer.appendChild(assistantMessageDiv);
-          // Scroll to the bottom of the chat container
-          chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+  // Append the typing indicator to its container
+  typingIndicatorContainer.appendChild(typingIndicator);
 
-    // Create a typing indicator container
-    const typingIndicatorContainer = document.createElement("div");
-    typingIndicatorContainer.classList.add("typing-indicator-container");
+  // Append the typing indicator container to the chat container
+  chatContainer.appendChild(typingIndicatorContainer);
 
-    // Create a typing indicator
-    const typingIndicator = document.createElement("div");
-    typingIndicator.classList.add("typing-indicator");
-    typingIndicator.textContent = "•••";
-
-    // Append the typing indicator to its container
-    typingIndicatorContainer.appendChild(typingIndicator);
-
-    // Append the typing indicator container to the chat container
-    chatContainer.appendChild(typingIndicatorContainer);
-
-    // Scroll to the bottom of the chat container
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-  });
+  // Scroll to the bottom of the chat container
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+});
